@@ -147,6 +147,24 @@ export const store = {
     });
   },
 
+  toggleMarkResolved(photoId: string, markId: string) {
+    update({
+      ...state,
+      roomPhotos: state.roomPhotos.map((photo) =>
+        photo.id === photoId
+          ? {
+              ...photo,
+              marks: photo.marks.map((mark) =>
+                mark.id === markId
+                  ? { ...mark, resolved: !mark.resolved }
+                  : mark
+              ),
+            }
+          : photo
+      ),
+    });
+  },
+
   resetState() {
     update(createDefaultState());
   },

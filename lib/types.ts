@@ -25,6 +25,11 @@ export type DangerCategory =
   | "escape-route"
   | "fall-object";
 
+export interface DangerFix {
+  name: string;
+  note: string;
+}
+
 export interface DangerMark {
   id: string;
   x: number;
@@ -33,6 +38,9 @@ export interface DangerMark {
   title: string;
   description: string;
   advice: string;
+  detail: string;
+  fixes: DangerFix[];
+  resolved: boolean;
 }
 
 export interface RoomPhoto {

@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { useAppState } from "@/lib/AppStateContext";
-import { ROLE_LABEL, type DangerMark } from "@/lib/types";
+import { ROLE_LABEL } from "@/lib/types";
 
 const CHECK_POINTS = [
   "家具が倒れてこないか（突っ張り棒・金具の固定）",
@@ -27,7 +28,6 @@ export default function RoomCheckPage() {
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>(
     {}
   );
-  const [openMarkId, setOpenMarkId] = useState<string | null>(null);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -108,20 +108,19 @@ export default function RoomCheckPage() {
 
               {photo.diagnosisStatus === "done" &&
                 photo.marks.map((mark, index) => (
-                  <button
+                  <Link
                     key={mark.id}
-                    type="button"
-                    onClick={() =>
-                      setOpenMarkId((current) =>
-                        current === mark.id ? null : mark.id
-                      )
-                    }
+                    href={`/room-check/${photo.id}/${mark.id}`}
                     style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
-                    className="absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-600 text-sm font-extrabold text-white shadow-lg ring-4 ring-red-200 animate-pulse"
+                    className={`absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-lg ring-4 ${
+                      mark.resolved
+                        ? "bg-green-600 ring-green-200"
+                        : "bg-red-600 ring-red-200 animate-pulse"
+                    }`}
                     aria-label={`危険ポイント：${mark.title}`}
                   >
-                    {index + 1}
-                  </button>
+                    {mark.resolved ? "✓" : index + 1}
+                  </Link>
                 ))}
             </div>
 
@@ -137,17 +136,33 @@ export default function RoomCheckPage() {
             {photo.diagnosisStatus === "done" && photo.marks.length > 0 && (
               <div className="flex flex-col divide-y divide-orange-100 border-b border-orange-100">
                 {photo.marks.map((mark, index) => (
-                  <DangerMarkRow
+                  <Link
                     key={mark.id}
-                    index={index}
-                    mark={mark}
-                    open={openMarkId === mark.id}
-                    onToggle={() =>
-                      setOpenMarkId((current) =>
-                        current === mark.id ? null : mark.id
-                      )
-                    }
-                  />
+                    href={`/room-check/${photo.id}/${mark.id}`}
+                    className={`flex items-center gap-3 px-4 py-3 ${
+                      mark.resolved ? "bg-green-50/60" : "bg-red-50/60"
+                    }`}
+                  >
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${
+                        mark.resolved ? "bg-green-600" : "bg-red-600"
+                      }`}
+                    >
+                      {mark.resolved ? "✓" : index + 1}
+                    </span>
+                    <span
+                      className={`flex-1 font-bold ${
+                        mark.resolved
+                          ? "text-zinc-400 line-through"
+                          : "text-zinc-900"
+                      }`}
+                    >
+                      {mark.title}
+                    </span>
+                    <span className="text-zinc-400" aria-hidden>
+                      ▶
+                    </span>
+                  </Link>
                 ))}
               </div>
             )}
@@ -201,48 +216,6 @@ export default function RoomCheckPage() {
           </div>
         ))}
       </section>
-    </div>
-  );
-}
-
-function DangerMarkRow({
-  index,
-  mark,
-  open,
-  onToggle,
-}: {
-  index: number;
-  mark: DangerMark;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="bg-red-50/60">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left"
-      >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-extrabold text-white">
-          {index + 1}
-        </span>
-        <span className="flex-1 font-bold text-zinc-900">{mark.title}</span>
-        <span className="text-zinc-400" aria-hidden>
-          {open ? "▲" : "▼"}
-        </span>
-      </button>
-      {open && (
-        <div className="px-4 pb-4 text-sm text-zinc-700">
-          <p>
-            <span className="font-bold text-red-700">どう危ない？：</span>
-            {mark.description}
-          </p>
-          <p className="mt-1">
-            <span className="font-bold text-green-700">どう直す？：</span>
-            {mark.advice}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ export function useAppState() {
     addChecklistItem: store.addChecklistItem,
     addRoomPhoto: store.addRoomPhoto,
     addRoomComment: store.addRoomComment,
+    toggleMarkResolved: store.toggleMarkResolved,
     resetState: store.resetState,
   };
 }
