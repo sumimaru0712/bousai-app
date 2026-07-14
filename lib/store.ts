@@ -1,7 +1,7 @@
 import { createDefaultState, STORAGE_KEY } from "./defaultState";
 import { createId } from "./id";
 import { generateDiagnosis } from "./roomDiagnosis";
-import type { AppState, Role, RoomComment } from "./types";
+import type { AppState, DangerMark, Role, RoomComment, RoomPhoto } from "./types";
 
 type Listener = () => void;
 
@@ -16,13 +16,35 @@ function persist() {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function sanitizeMark(mark: DangerMark): DangerMark {
+  return {
+    ...mark,
+    detail: mark.detail ?? mark.description ?? "",
+    fixes: mark.fixes ?? [],
+    resolved: mark.resolved ?? false,
+  };
+}
+
+function sanitizeRoomPhoto(photo: RoomPhoto): RoomPhoto {
+  return {
+    ...photo,
+    comments: photo.comments ?? [],
+    diagnosisStatus: photo.diagnosisStatus ?? "done",
+    marks: (photo.marks ?? []).map(sanitizeMark),
+  };
+}
+
 function ensureInitialized() {
   if (initialized || typeof window === "undefined") return;
   initialized = true;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      state = { ...createDefaultState(), ...(JSON.parse(raw) as AppState) };
+      const loaded = { ...createDefaultState(), ...(JSON.parse(raw) as AppState) };
+      state = {
+        ...loaded,
+        roomPhotos: loaded.roomPhotos.map(sanitizeRoomPhoto),
+      };
     }
   } catch {
     state = createDefaultState();
@@ -141,6 +163,24 @@ export const store = {
                   createdAt: new Date().toISOString(),
                 } satisfies RoomComment,
               ],
+            }
+          : photo
+      ),
+    });
+  },
+
+  toggleMarkResolved(photoId: string, markId: string) {
+    update({
+      ...state,
+      roomPhotos: state.roomPhotos.map((photo) =>
+        photo.id === photoId
+          ? {
+              ...photo,
+              marks: photo.marks.map((mark) =>
+                mark.id === markId
+                  ? { ...mark, resolved: !mark.resolved }
+                  : mark
+              ),
             }
           : photo
       ),
