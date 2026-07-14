@@ -1,0 +1,248 @@
+"use client";
+
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { useAppState } from "@/lib/AppStateContext";
+import { ROLE_LABEL, type DangerMark } from "@/lib/types";
+
+const CHECK_POINTS = [
+  "家具が倒れてこないか（突っ張り棒・金具の固定）",
+  "窓や食器棚のガラスが飛び散らないか（飛散防止フィルム）",
+  "避難経路や出入口の前に物が置かれていないか",
+  "背の高い家具の上に、落ちてきそうな物が置かれていないか",
+];
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleString("ja-JP", {
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export default function RoomCheckPage() {
+  const { state, addRoomPhoto, addRoomComment } = useAppState();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>(
+    {}
+  );
+  const [openMarkId, setOpenMarkId] = useState<string | null>(null);
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        addRoomPhoto(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  }
+
+  function handleCommentSubmit(photoId: string) {
+    const text = (commentDrafts[photoId] ?? "").trim();
+    if (!text) return;
+    addRoomComment(photoId, text);
+    setCommentDrafts((prev) => ({ ...prev, [photoId]: "" }));
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-orange-100">
+        <h1 className="text-xl font-extrabold text-zinc-900">
+          お部屋防災診断
+        </h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          お部屋の写真をとると、AIが危ないところをマークでおしえてくれます
+        </p>
+
+        <ul className="mt-4 flex flex-col gap-2">
+          {CHECK_POINTS.map((point) => (
+            <li key={point} className="flex items-start gap-2 text-sm text-zinc-600">
+              <span aria-hidden>✅</span>
+              {point}
+            </li>
+          ))}
+        </ul>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileChange}
+          className="absolute h-px w-px overflow-hidden whitespace-nowrap opacity-0"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="mt-5 w-full rounded-full bg-orange-600 py-4 text-lg font-extrabold text-white shadow-md transition-colors hover:bg-orange-700"
+        >
+          📷 お部屋の写真をとる
+        </button>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        {state.roomPhotos.length === 0 && (
+          <p className="rounded-3xl bg-white p-6 text-center text-sm text-zinc-500 shadow-sm ring-1 ring-orange-100">
+            まだ写真がありません。上のボタンから撮ってみましょう。
+          </p>
+        )}
+
+        {state.roomPhotos.map((photo) => (
+          <div
+            key={photo.id}
+            className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-orange-100"
+          >
+            <div className="relative aspect-video w-full bg-zinc-100">
+              <Image
+                src={photo.dataUrl}
+                alt="お部屋の写真"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+
+              {photo.diagnosisStatus === "done" &&
+                photo.marks.map((mark, index) => (
+                  <button
+                    key={mark.id}
+                    type="button"
+                    onClick={() =>
+                      setOpenMarkId((current) =>
+                        current === mark.id ? null : mark.id
+                      )
+                    }
+                    style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
+                    className="absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-600 text-sm font-extrabold text-white shadow-lg ring-4 ring-red-200 animate-pulse"
+                    aria-label={`危険ポイント：${mark.title}`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+            </div>
+
+            {photo.diagnosisStatus === "analyzing" && (
+              <div className="flex items-center gap-2 bg-orange-50 px-4 py-2 text-sm font-bold text-orange-700">
+                <span className="animate-spin" aria-hidden>
+                  🔄
+                </span>
+                AIが診断中です…
+              </div>
+            )}
+
+            {photo.diagnosisStatus === "done" && photo.marks.length > 0 && (
+              <div className="flex flex-col divide-y divide-orange-100 border-b border-orange-100">
+                {photo.marks.map((mark, index) => (
+                  <DangerMarkRow
+                    key={mark.id}
+                    index={index}
+                    mark={mark}
+                    open={openMarkId === mark.id}
+                    onToggle={() =>
+                      setOpenMarkId((current) =>
+                        current === mark.id ? null : mark.id
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="p-4">
+              <p className="text-xs font-bold text-orange-600">
+                {ROLE_LABEL[photo.uploadedBy]}が投稿・{formatTime(photo.uploadedAt)}
+              </p>
+
+              <ul className="mt-3 flex flex-col gap-2">
+                {photo.comments.map((comment) => (
+                  <li
+                    key={comment.id}
+                    className="rounded-2xl bg-orange-50 px-3 py-2 text-sm"
+                  >
+                    <span className="font-bold text-orange-700">
+                      {ROLE_LABEL[comment.author]}：
+                    </span>
+                    <span className="text-zinc-700">{comment.text}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleCommentSubmit(photo.id);
+                }}
+                className="mt-3 flex gap-2"
+              >
+                <input
+                  type="text"
+                  value={commentDrafts[photo.id] ?? ""}
+                  onChange={(event) =>
+                    setCommentDrafts((prev) => ({
+                      ...prev,
+                      [photo.id]: event.target.value,
+                    }))
+                  }
+                  placeholder="気づいたことをコメント"
+                  className="flex-1 rounded-full border border-orange-200 px-4 py-2 text-sm outline-none focus:border-orange-500"
+                />
+                <button
+                  type="submit"
+                  className="rounded-full bg-orange-600 px-4 py-2 text-sm font-bold text-white hover:bg-orange-700"
+                >
+                  送信
+                </button>
+              </form>
+            </div>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function DangerMarkRow({
+  index,
+  mark,
+  open,
+  onToggle,
+}: {
+  index: number;
+  mark: DangerMark;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="bg-red-50/60">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left"
+      >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-extrabold text-white">
+          {index + 1}
+        </span>
+        <span className="flex-1 font-bold text-zinc-900">{mark.title}</span>
+        <span className="text-zinc-400" aria-hidden>
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 text-sm text-zinc-700">
+          <p>
+            <span className="font-bold text-red-700">どう危ない？：</span>
+            {mark.description}
+          </p>
+          <p className="mt-1">
+            <span className="font-bold text-green-700">どう直す？：</span>
+            {mark.advice}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
