@@ -32,7 +32,7 @@ export default function AnpiPage() {
           onClick={() => markSafe(state.currentRole)}
           className="mt-6 w-full rounded-full bg-orange-600 py-6 text-2xl font-extrabold text-white shadow-md transition-colors hover:bg-orange-700 active:bg-orange-800"
         >
-          🙋 無事です！
+          🙆 無事です！
         </button>
 
         <p className="mt-4 text-sm text-zinc-500">
