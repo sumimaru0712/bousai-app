@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useAppState } from "@/lib/AppStateContext";
+import { resizeImageToDataUrl } from "@/lib/resizeImage";
 import { ROLE_LABEL } from "@/lib/types";
 
 const CHECK_POINTS = [
@@ -29,17 +30,16 @@ export default function RoomCheckPage() {
     {}
   );
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        addRoomPhoto(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
     event.target.value = "";
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      addRoomPhoto(dataUrl);
+    } catch {
+      // Ignore unreadable files; the user can just retake the photo.
+    }
   }
 
   function handleCommentSubmit(photoId: string) {

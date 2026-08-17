@@ -19,6 +19,14 @@ export function useAppState() {
     addRoomPhoto: store.addRoomPhoto,
     addRoomComment: store.addRoomComment,
     toggleMarkResolved: store.toggleMarkResolved,
+    reportHealth: store.reportHealth,
+    setGrowthEnabled: store.setGrowthEnabled,
+    setGrowthSpecies: store.setGrowthSpecies,
+    setMinigamesEnabled: store.setMinigamesEnabled,
+    awardPoints: store.awardPoints,
+    addActivity: store.addActivity,
+    recordVoiceMessage: store.recordVoiceMessage,
+    deleteVoiceMessage: store.deleteVoiceMessage,
     resetState: store.resetState,
   };
 }
