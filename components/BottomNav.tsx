@@ -8,6 +8,10 @@ const NAV_ITEMS = [
   { href: "/anpi", label: "安否確認", emoji: "🙋" },
   { href: "/checklist", label: "チェックリスト", emoji: "🎒" },
   { href: "/room-check", label: "お部屋診断", emoji: "📷" },
+  { href: "/health", label: "体調", emoji: "😊" },
+  { href: "/growth", label: "そだてる", emoji: "🥚" },
+  { href: "/voice", label: "ボイス", emoji: "🎙️" },
+  { href: "/minigames", label: "ゲーム", emoji: "🎮" },
 ];
 
 export function BottomNav() {
@@ -20,17 +24,17 @@ export function BottomNav() {
           const active =
             item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="min-w-0 flex-1">
               <Link
                 href={item.href}
-                className={`flex flex-col items-center gap-0.5 py-2.5 text-xs font-bold transition-colors ${
+                className={`flex flex-col items-center gap-1 px-0.5 py-4 text-[10px] font-bold leading-tight transition-colors ${
                   active ? "text-orange-700" : "text-zinc-500 hover:text-orange-600"
                 }`}
               >
-                <span className="text-2xl" aria-hidden>
+                <span className="text-xl" aria-hidden>
                   {item.emoji}
                 </span>
-                {item.label}
+                <span className="w-full truncate text-center">{item.label}</span>
               </Link>
             </li>
           );

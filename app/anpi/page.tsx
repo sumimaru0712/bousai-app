@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useAppState } from "@/lib/AppStateContext";
-import { ROLE_LABEL, type Role } from "@/lib/types";
+import { getTodayWeekday, ROLE_LABEL, type Role } from "@/lib/types";
 
 const ROLES: Role[] = ["grandchild", "grandparent"];
 
@@ -18,6 +19,16 @@ function formatTime(iso: string | null): string {
 export default function AnpiPage() {
   const { state, markSafe } = useAppState();
   const myRecord = state.anpi[state.currentRole];
+  const [justConfirmed, setJustConfirmed] = useState(false);
+
+  const todayMessage = state.voice.messages[getTodayWeekday()];
+  const showVoice =
+    justConfirmed && state.currentRole === "grandparent" && todayMessage;
+
+  function handleConfirm() {
+    markSafe(state.currentRole);
+    setJustConfirmed(true);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,15 +40,29 @@ export default function AnpiPage() {
 
         <button
           type="button"
-          onClick={() => markSafe(state.currentRole)}
+          onClick={handleConfirm}
           className="mt-6 w-full rounded-full bg-orange-600 py-6 text-2xl font-extrabold text-white shadow-md transition-colors hover:bg-orange-700 active:bg-orange-800"
         >
-          🙋 無事です！
+          🙆 無事です！
         </button>
 
         <p className="mt-4 text-sm text-zinc-500">
           {ROLE_LABEL[state.currentRole]}として：{formatTime(myRecord.updatedAt)}
         </p>
+
+        {showVoice && (
+          <div className="mt-5 rounded-2xl bg-orange-50 p-4 text-left">
+            <p className="text-sm font-extrabold text-orange-700">
+              🎙️ 孫からのメッセージがとどきました
+            </p>
+            <audio
+              controls
+              autoPlay
+              src={todayMessage.dataUrl}
+              className="mt-2 w-full"
+            />
+          </div>
+        )}
       </section>
 
       <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-orange-100">

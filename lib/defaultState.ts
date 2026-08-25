@@ -20,5 +20,23 @@ export function createDefaultState(): AppState {
       { id: "cash", label: "現金（小銭も）", checked: false, addedBy: "grandparent" },
     ],
     roomPhotos: [],
+    health: {
+      latest: null,
+      history: [],
+    },
+    growth: {
+      enabled: true,
+      species: null,
+      points: 0,
+    },
+    minigames: {
+      enabled: true,
+    },
+    voice: {
+      messages: {},
+    },
+    activity: {
+      entries: [],
+    },
   };
 }
