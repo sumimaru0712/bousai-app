@@ -2,6 +2,8 @@ import type { GrowthSpecies } from "./growth";
 
 export type Role = "grandchild" | "grandparent";
 
+export type RoleText = Record<Role, string>;
+
 export interface AnpiRecord {
   status: "safe" | "unknown";
   updatedAt: string | null;
@@ -28,8 +30,8 @@ export type DangerCategory =
   | "fall-object";
 
 export interface DangerFix {
-  name: string;
-  note: string;
+  name: RoleText;
+  note: RoleText;
 }
 
 export interface DangerMark {
@@ -37,10 +39,10 @@ export interface DangerMark {
   x: number;
   y: number;
   category: DangerCategory;
-  title: string;
-  description: string;
-  advice: string;
-  detail: string;
+  title: RoleText;
+  description: RoleText;
+  advice: RoleText;
+  detail: RoleText;
   fixes: DangerFix[];
   checkedBy: Record<Role, boolean>;
   resolvedAt: string | null;

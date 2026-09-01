@@ -8,11 +8,13 @@ import type {
   ActivityEntry,
   ActivityState,
   AppState,
+  DangerFix,
   DangerMark,
   GrowthState,
   HealthStatus,
   MinigamesState,
   Role,
+  RoleText,
   RoomComment,
   RoomPhoto,
   VoiceState,
@@ -32,6 +34,28 @@ function persist() {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function toRoleText(value: unknown): RoleText | undefined {
+  if (typeof value === "string") {
+    return { grandparent: value, grandchild: value };
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    "grandparent" in value &&
+    "grandchild" in value
+  ) {
+    return value as RoleText;
+  }
+  return undefined;
+}
+
+function sanitizeFix(fix: DangerFix): DangerFix {
+  return {
+    name: toRoleText(fix.name) ?? { grandparent: "", grandchild: "" },
+    note: toRoleText(fix.note) ?? { grandparent: "", grandchild: "" },
+  };
+}
+
 function sanitizeMark(
   mark: DangerMark & { resolved?: boolean },
   fallbackTimestamp: string
@@ -47,10 +71,17 @@ function sanitizeMark(
       : legacyResolved
         ? fallbackTimestamp
         : null;
+  const description = toRoleText(mark.description) ?? {
+    grandparent: "",
+    grandchild: "",
+  };
   return {
     ...mark,
-    detail: mark.detail ?? mark.description ?? "",
-    fixes: mark.fixes ?? [],
+    title: toRoleText(mark.title) ?? description,
+    description,
+    advice: toRoleText(mark.advice) ?? description,
+    detail: toRoleText(mark.detail) ?? description,
+    fixes: (mark.fixes ?? []).map(sanitizeFix),
     checkedBy,
     resolvedAt,
   };

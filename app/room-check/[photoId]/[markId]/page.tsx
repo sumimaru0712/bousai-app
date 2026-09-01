@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { use } from "react";
 import { useAppState } from "@/lib/AppStateContext";
+import { t } from "@/lib/copy";
 import { isMarkResolved } from "@/lib/markStatus";
 import { ROLE_LABEL, type DangerCategory, type Role } from "@/lib/types";
 
@@ -88,7 +89,7 @@ export default function DangerMarkDetailPage({
                 危険ポイント {index + 1}
               </p>
               <h1 className="text-xl font-extrabold text-zinc-900">
-                {mark.title}
+                {t(mark.title, state.currentRole)}
               </h1>
             </div>
           </div>
@@ -98,7 +99,7 @@ export default function DangerMarkDetailPage({
               🔍 ここが危ない
             </h2>
             <p className="mt-2 text-base leading-relaxed text-zinc-700">
-              {mark.detail}
+              {t(mark.detail, state.currentRole)}
             </p>
           </section>
 
@@ -108,9 +109,16 @@ export default function DangerMarkDetailPage({
             </h2>
             <ul className="mt-2 flex flex-col gap-2">
               {mark.fixes.map((fix) => (
-                <li key={fix.name} className="rounded-2xl bg-green-50 p-3">
-                  <p className="font-bold text-zinc-900">{fix.name}</p>
-                  <p className="mt-0.5 text-sm text-zinc-600">{fix.note}</p>
+                <li
+                  key={fix.name.grandparent}
+                  className="rounded-2xl bg-green-50 p-3"
+                >
+                  <p className="font-bold text-zinc-900">
+                    {t(fix.name, state.currentRole)}
+                  </p>
+                  <p className="mt-0.5 text-sm text-zinc-600">
+                    {t(fix.note, state.currentRole)}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -131,7 +139,7 @@ export default function DangerMarkDetailPage({
                       key={role}
                       type="button"
                       onClick={() => setMarkChecked(photo.id, mark.id, !checked)}
-                      className={`flex min-h-[56px] items-center justify-between px-4 py-3 text-left transition-colors ${
+                      className={`flex min-h-[var(--tap-min)] items-center justify-between px-4 py-3 text-left transition-colors ${
                         checked
                           ? "bg-green-50 hover:bg-green-100"
                           : "bg-white hover:bg-orange-50"
@@ -154,7 +162,7 @@ export default function DangerMarkDetailPage({
                 return (
                   <div
                     key={role}
-                    className="flex min-h-[56px] items-center justify-between bg-zinc-50 px-4 py-3"
+                    className="flex min-h-[var(--tap-min)] items-center justify-between bg-zinc-50 px-4 py-3"
                   >
                     <span className="font-bold text-zinc-500">
                       {ROLE_LABEL[role]}

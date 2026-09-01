@@ -18,7 +18,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky bottom-0 z-10 border-t border-orange-200 bg-white/95 backdrop-blur">
+    <nav className="sticky bottom-0 z-10 border-t border-[var(--accent-border)] bg-white/95 backdrop-blur">
       <ul className="mx-auto flex max-w-3xl">
         {NAV_ITEMS.map((item) => {
           const active =
@@ -28,7 +28,9 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 className={`flex flex-col items-center gap-1 px-0.5 py-4 text-[10px] font-bold leading-tight transition-colors ${
-                  active ? "text-orange-700" : "text-zinc-500 hover:text-orange-600"
+                  active
+                    ? "text-[var(--accent-dark)]"
+                    : "text-zinc-500 hover:text-[var(--accent)]"
                 }`}
               >
                 <span className="text-xl" aria-hidden>
