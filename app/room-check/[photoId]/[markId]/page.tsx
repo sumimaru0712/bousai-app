@@ -60,7 +60,7 @@ export default function DangerMarkDetailPage({
             alt="お部屋の写真"
             fill
             unoptimized
-            className="object-cover"
+            className="object-contain"
           />
           {photo.marks.map((item, i) => (
             <span

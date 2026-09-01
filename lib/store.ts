@@ -1,7 +1,8 @@
 import { createDefaultState, STORAGE_KEY } from "./defaultState";
+import type { ValidatedDetection } from "./diagnosisSchema";
 import { createId } from "./id";
 import { isMarkResolved } from "./markStatus";
-import { generateDiagnosis } from "./roomDiagnosis";
+import { buildMarksFromDetections } from "./roomDiagnosis";
 import type { GrowthSpecies } from "./growth";
 import { WEEKDAY_LABEL } from "./types";
 import type {
@@ -22,8 +23,6 @@ import type {
 } from "./types";
 
 type Listener = () => void;
-
-const DIAGNOSIS_DELAY_MS = 1400;
 
 let state: AppState = createDefaultState();
 let initialized = false;
@@ -190,6 +189,56 @@ function withActivity(
   };
 }
 
+function setPhotoError(photoId: string, diagnosisError: string) {
+  update({
+    ...state,
+    roomPhotos: state.roomPhotos.map((photo) =>
+      photo.id === photoId
+        ? { ...photo, diagnosisStatus: "error", diagnosisError }
+        : photo
+    ),
+  });
+}
+
+async function runDiagnosis(photoId: string, dataUrl: string) {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    setPhotoError(photoId, "写真の形式が正しくありません");
+    return;
+  }
+  const [, mimeType, imageBase64] = match;
+
+  try {
+    const res = await fetch("/api/diagnose", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageBase64, mimeType }),
+    });
+
+    if (!res.ok) {
+      setPhotoError(photoId, "うまく診断できませんでした");
+      return;
+    }
+
+    const json = (await res.json()) as { detections?: unknown };
+    const detections = Array.isArray(json.detections)
+      ? (json.detections as ValidatedDetection[])
+      : [];
+    const marks = buildMarksFromDetections(detections);
+
+    update({
+      ...state,
+      roomPhotos: state.roomPhotos.map((photo) =>
+        photo.id === photoId
+          ? { ...photo, diagnosisStatus: "done", marks, diagnosisError: undefined }
+          : photo
+      ),
+    });
+  } catch {
+    setPhotoError(photoId, "通信エラーが発生しました");
+  }
+}
+
 export const store = {
   subscribe(listener: Listener) {
     ensureInitialized();
@@ -283,21 +332,22 @@ export const store = {
     );
 
     if (typeof window !== "undefined") {
-      window.setTimeout(() => {
-        update({
-          ...state,
-          roomPhotos: state.roomPhotos.map((photo) =>
-            photo.id === photoId
-              ? {
-                  ...photo,
-                  diagnosisStatus: "done",
-                  marks: generateDiagnosis(),
-                }
-              : photo
-          ),
-        });
-      }, DIAGNOSIS_DELAY_MS);
+      void runDiagnosis(photoId, dataUrl);
     }
+  },
+
+  retryDiagnosis(photoId: string) {
+    const photo = state.roomPhotos.find((entry) => entry.id === photoId);
+    if (!photo) return;
+    update({
+      ...state,
+      roomPhotos: state.roomPhotos.map((entry) =>
+        entry.id === photoId
+          ? { ...entry, diagnosisStatus: "analyzing", diagnosisError: undefined }
+          : entry
+      ),
+    });
+    void runDiagnosis(photoId, photo.dataUrl);
   },
 
   addRoomComment(photoId: string, text: string) {
@@ -356,11 +406,17 @@ export const store = {
 
     if (!wasResolved && nowResolved) {
       next = withPoints(next, 8);
-      next = withActivity(next, `お部屋の危険「${mark.title}」を二人でなおしたよ！🎉`);
+      next = withActivity(
+        next,
+        `お部屋の危険「${mark.title.grandparent}」を二人でなおしたよ！🎉`
+      );
     } else if (wasResolved && !nowResolved) {
       next = withPoints(next, -8);
     } else if (checked) {
-      next = withActivity(next, `お部屋の危険「${mark.title}」をチェックしたよ`);
+      next = withActivity(
+        next,
+        `お部屋の危険「${mark.title.grandparent}」をチェックしたよ`
+      );
     }
 
     update(next);

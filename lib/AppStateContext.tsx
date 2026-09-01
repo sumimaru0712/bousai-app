@@ -19,6 +19,7 @@ export function useAppState() {
     addRoomPhoto: store.addRoomPhoto,
     addRoomComment: store.addRoomComment,
     setMarkChecked: store.setMarkChecked,
+    retryDiagnosis: store.retryDiagnosis,
     reportHealth: store.reportHealth,
     setGrowthEnabled: store.setGrowthEnabled,
     setGrowthSpecies: store.setGrowthSpecies,

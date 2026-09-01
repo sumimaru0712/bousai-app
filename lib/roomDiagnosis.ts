@@ -1,4 +1,5 @@
 import { createId } from "./id";
+import type { ValidatedDetection } from "./diagnosisSchema";
 import type { DangerCategory, DangerMark } from "./types";
 
 type CatalogEntry = Omit<
@@ -285,22 +286,34 @@ const DANGER_CATALOG: Record<DangerCategory, CatalogEntry> = {
   },
 };
 
-const DANGER_CATEGORIES = Object.keys(DANGER_CATALOG) as DangerCategory[];
-
-function randomPosition(): number {
-  return 15 + Math.random() * 70;
+function clampPercent(value: number): number {
+  return Math.min(95, Math.max(5, value));
 }
 
-export function generateDiagnosis(): DangerMark[] {
-  const shuffled = [...DANGER_CATEGORIES].sort(() => Math.random() - 0.5);
-  const count = 2 + Math.floor(Math.random() * 2);
-  return shuffled.slice(0, count).map((category) => ({
-    ...DANGER_CATALOG[category],
-    id: createId(),
-    category,
-    x: randomPosition(),
-    y: randomPosition(),
-    checkedBy: { grandchild: false, grandparent: false },
-    resolvedAt: null,
-  }));
+/**
+ * Converts validated AI detections (0-1000 normalized boxes) into
+ * DangerMark objects by combining them with the human-written catalog.
+ * The AI only ever supplies position, category, and a short observation —
+ * everything else (title/detail/advice/fixes) comes from the catalog above.
+ */
+export function buildMarksFromDetections(
+  detections: ValidatedDetection[]
+): DangerMark[] {
+  return detections.map((detection) => {
+    const [ymin, xmin, ymax, xmax] = detection.box_2d;
+    return {
+      ...DANGER_CATALOG[detection.category],
+      id: createId(),
+      category: detection.category,
+      x: clampPercent((xmin + xmax) / 2 / 10),
+      y: clampPercent((ymin + ymax) / 2 / 10),
+      observation: {
+        grandparent: detection.observation,
+        grandchild: detection.observationEasy,
+      },
+      confidence: detection.confidence,
+      checkedBy: { grandchild: false, grandparent: false },
+      resolvedAt: null,
+    };
+  });
 }
