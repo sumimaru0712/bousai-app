@@ -18,7 +18,7 @@ export function useAppState() {
     addChecklistItem: store.addChecklistItem,
     addRoomPhoto: store.addRoomPhoto,
     addRoomComment: store.addRoomComment,
-    toggleMarkResolved: store.toggleMarkResolved,
+    setMarkChecked: store.setMarkChecked,
     reportHealth: store.reportHealth,
     setGrowthEnabled: store.setGrowthEnabled,
     setGrowthSpecies: store.setGrowthSpecies,

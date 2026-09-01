@@ -4,8 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useAppState } from "@/lib/AppStateContext";
+import { getCheckCount, getPhotoProgress, isMarkResolved } from "@/lib/markStatus";
 import { resizeImageToDataUrl } from "@/lib/resizeImage";
-import { ROLE_LABEL } from "@/lib/types";
+import { ROLE_LABEL, type DangerMark, type Role } from "@/lib/types";
+
+function waitingRoleLabel(mark: DangerMark): string | null {
+  const roles: Role[] = ["grandchild", "grandparent"];
+  const waiting = roles.find((role) => !mark.checkedBy[role]);
+  return waiting ? ROLE_LABEL[waiting] : null;
+}
 
 const CHECK_POINTS = [
   "家具が倒れてこないか（突っ張り棒・金具の固定）",
@@ -107,21 +114,28 @@ export default function RoomCheckPage() {
               />
 
               {photo.diagnosisStatus === "done" &&
-                photo.marks.map((mark, index) => (
-                  <Link
-                    key={mark.id}
-                    href={`/room-check/${photo.id}/${mark.id}`}
-                    style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
-                    className={`absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-lg ring-4 ${
-                      mark.resolved
-                        ? "bg-green-600 ring-green-200"
-                        : "bg-red-600 ring-red-200 animate-pulse"
-                    }`}
-                    aria-label={`危険ポイント：${mark.title}`}
-                  >
-                    {mark.resolved ? "✓" : index + 1}
-                  </Link>
-                ))}
+                photo.marks.map((mark, index) => {
+                  const checkCount = getCheckCount(mark);
+                  const markerStyle =
+                    checkCount === 2
+                      ? "bg-green-600 ring-green-200"
+                      : checkCount === 1
+                        ? "bg-amber-500 ring-amber-200"
+                        : "bg-red-600 ring-red-200 animate-pulse";
+                  const markerLabel =
+                    checkCount === 2 ? "✓" : checkCount === 1 ? "◐" : index + 1;
+                  return (
+                    <Link
+                      key={mark.id}
+                      href={`/room-check/${photo.id}/${mark.id}`}
+                      style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
+                      className={`absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-lg ring-4 ${markerStyle}`}
+                      aria-label={`危険ポイント：${mark.title}`}
+                    >
+                      {markerLabel}
+                    </Link>
+                  );
+                })}
             </div>
 
             {photo.diagnosisStatus === "analyzing" && (
@@ -134,37 +148,67 @@ export default function RoomCheckPage() {
             )}
 
             {photo.diagnosisStatus === "done" && photo.marks.length > 0 && (
-              <div className="flex flex-col divide-y divide-orange-100 border-b border-orange-100">
-                {photo.marks.map((mark, index) => (
-                  <Link
-                    key={mark.id}
-                    href={`/room-check/${photo.id}/${mark.id}`}
-                    className={`flex items-center gap-3 px-4 py-3 ${
-                      mark.resolved ? "bg-green-50/60" : "bg-red-50/60"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${
-                        mark.resolved ? "bg-green-600" : "bg-red-600"
-                      }`}
-                    >
-                      {mark.resolved ? "✓" : index + 1}
-                    </span>
-                    <span
-                      className={`flex-1 font-bold ${
-                        mark.resolved
-                          ? "text-zinc-400 line-through"
-                          : "text-zinc-900"
-                      }`}
-                    >
-                      {mark.title}
-                    </span>
-                    <span className="text-zinc-400" aria-hidden>
-                      ▶
-                    </span>
-                  </Link>
-                ))}
-              </div>
+              <>
+                <div className="flex items-center justify-between bg-orange-50/60 px-4 py-2">
+                  <p className="text-xs font-bold text-orange-700">
+                    対策 {getPhotoProgress(photo).done} / {getPhotoProgress(photo).total} か所
+                  </p>
+                </div>
+                <div className="flex flex-col divide-y divide-orange-100 border-b border-orange-100">
+                  {photo.marks.map((mark, index) => {
+                    const checkCount = getCheckCount(mark);
+                    const resolved = isMarkResolved(mark);
+                    const waiting = waitingRoleLabel(mark);
+                    const rowStatus = resolved
+                      ? "二人で対策ずみ"
+                      : checkCount === 1
+                        ? `${waiting}のかくにん待ち`
+                        : "まだ対策していません";
+                    return (
+                      <Link
+                        key={mark.id}
+                        href={`/room-check/${photo.id}/${mark.id}`}
+                        className={`flex items-center gap-3 px-4 py-3 ${
+                          resolved
+                            ? "bg-green-50/60"
+                            : checkCount === 1
+                              ? "bg-amber-50/60"
+                              : "bg-red-50/60"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${
+                            resolved
+                              ? "bg-green-600"
+                              : checkCount === 1
+                                ? "bg-amber-500"
+                                : "bg-red-600"
+                          }`}
+                        >
+                          {resolved ? "✓" : checkCount === 1 ? "◐" : index + 1}
+                        </span>
+                        <span className="flex-1">
+                          <span
+                            className={`block font-bold ${
+                              resolved
+                                ? "text-zinc-400 line-through"
+                                : "text-zinc-900"
+                            }`}
+                          >
+                            {mark.title}
+                          </span>
+                          <span className="text-xs text-zinc-500">
+                            {rowStatus}
+                          </span>
+                        </span>
+                        <span className="text-zinc-400" aria-hidden>
+                          ▶
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             <div className="p-4">
