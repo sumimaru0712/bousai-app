@@ -81,6 +81,9 @@ function sanitizeMark(
     description,
     advice: toRoleText(mark.advice) ?? description,
     detail: toRoleText(mark.detail) ?? description,
+    points: (mark.points ?? [])
+      .map(toRoleText)
+      .filter((value): value is RoleText => value !== undefined),
     fixes: (mark.fixes ?? []).map(sanitizeFix),
     checkedBy,
     resolvedAt,

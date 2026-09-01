@@ -1,12 +1,13 @@
 import { createId } from "./id";
-import type { DangerMark } from "./types";
+import type { DangerCategory, DangerMark } from "./types";
 
-const DANGER_CATALOG: Omit<
+type CatalogEntry = Omit<
   DangerMark,
-  "id" | "x" | "y" | "checkedBy" | "resolvedAt"
->[] = [
-  {
-    category: "furniture",
+  "id" | "x" | "y" | "category" | "checkedBy" | "resolvedAt"
+>;
+
+const DANGER_CATALOG: Record<DangerCategory, CatalogEntry> = {
+  furniture: {
     title: {
       grandparent: "家具の転倒",
       grandchild: "たおれる かぐ",
@@ -27,6 +28,20 @@ const DANGER_CATALOG: Omit<
       grandchild:
         "ほんだなや たんす、しょっきだななど せの たかい かぐが かべや てんじょうに とめて いないと、おおきな じしんの ゆれで てまえに たおれてくることが あります。とくに、ねる ばしょや よく すわる ばしょの ちかくに ある かぐは きを つけましょう。たおれた かぐの したじきに なると、にげおくれる げんいんにも なります。",
     },
+    points: [
+      {
+        grandparent: "背の高い家具は壁や天井に固定する",
+        grandchild: "せの たかい かぐは かべや てんじょうに とめる",
+      },
+      {
+        grandparent: "寝る場所の近くには倒れやすい家具を置かない",
+        grandchild: "ねる ばしょの ちかくには たおれやすい かぐを おかない",
+      },
+      {
+        grandparent: "重い物ほど下に、軽い物ほど上に収納する",
+        grandchild: "おもい ものほど した、かるい ものほど うえに しまう",
+      },
+    ],
     fixes: [
       {
         name: {
@@ -60,8 +75,7 @@ const DANGER_CATALOG: Omit<
       },
     ],
   },
-  {
-    category: "glass",
+  glass: {
     title: {
       grandparent: "ガラスの飛散",
       grandchild: "われる ガラス",
@@ -82,6 +96,20 @@ const DANGER_CATALOG: Omit<
       grandchild:
         "まどガラスや しょっきだなの ガラスとびらは、じしんの ゆれで われてしまうことが あります。われた ガラスの かけらは するどく、はだしで あるくと けがを してしまいます。よるの じしんでは くらくて かけらに きづきにくいので、とくに きを つけましょう。",
     },
+    points: [
+      {
+        grandparent: "窓や食器棚に飛散防止フィルムを貼る",
+        grandchild: "まどや しょっきだなに われても とびちらない フィルムを はる",
+      },
+      {
+        grandparent: "割れやすい戸には厚手のカーテンをかける",
+        grandchild: "われやすい とびらには あつい カーテンを かける",
+      },
+      {
+        grandparent: "夜でも安全に歩けるよう、スリッパを近くに置く",
+        grandchild: "よるでも あんぜんに あるけるように、スリッパを ちかくに おく",
+      },
+    ],
     fixes: [
       {
         name: {
@@ -117,8 +145,7 @@ const DANGER_CATALOG: Omit<
       },
     ],
   },
-  {
-    category: "escape-route",
+  "escape-route": {
     title: {
       grandparent: "避難経路をふさぐ物",
       grandchild: "にげみちを ふさぐ もの",
@@ -139,6 +166,20 @@ const DANGER_CATALOG: Omit<
       grandchild:
         "げんかんや ドアの まえ、ろうかなどに ものが おかれていると、じしんの ゆれで たおれてきて とおりみちを ふさいでしまうことが あります。くらい なかで あわてて にげるときに つまずくと、おおきな けがに つながるかも しれません。",
     },
+    points: [
+      {
+        grandparent: "出入口や廊下には物を置かない",
+        grandchild: "でいりぐちや ろうかには ものを おかない",
+      },
+      {
+        grandparent: "停電にそなえて足元灯を用意する",
+        grandchild: "でんきが きえたときの ために あしもとの ライトを よういする",
+      },
+      {
+        grandparent: "すぐ履けるように靴を玄関に置いておく",
+        grandchild: "すぐ はけるように くつを げんかんに おいておく",
+      },
+    ],
     fixes: [
       {
         name: {
@@ -174,8 +215,7 @@ const DANGER_CATALOG: Omit<
       },
     ],
   },
-  {
-    category: "fall-object",
+  "fall-object": {
     title: {
       grandparent: "落ちてきそうな物",
       grandchild: "おちてきそうな もの",
@@ -196,6 +236,20 @@ const DANGER_CATALOG: Omit<
       grandchild:
         "たなの うえや たかい ばしょに おかれた ほん、おきもの、かでんなどは、じしんの ゆれで おちてくることが あります。ねている ばしょの ちかくや、よく とおる ばしょの うえに ものが あると、おちてきたときに おおきな けがを するかも しれません。",
     },
+    points: [
+      {
+        grandparent: "高い場所には重い物を置かない",
+        grandchild: "たかい ばしょには おもい ものを おかない",
+      },
+      {
+        grandparent: "棚には滑り止めシートを敷く",
+        grandchild: "たなには すべりどめ シートを しく",
+      },
+      {
+        grandparent: "収納扉が開かないようストッパーをつける",
+        grandchild: "とびらが あかないように ストッパーを つける",
+      },
+    ],
     fixes: [
       {
         name: {
@@ -229,18 +283,21 @@ const DANGER_CATALOG: Omit<
       },
     ],
   },
-];
+};
+
+const DANGER_CATEGORIES = Object.keys(DANGER_CATALOG) as DangerCategory[];
 
 function randomPosition(): number {
   return 15 + Math.random() * 70;
 }
 
 export function generateDiagnosis(): DangerMark[] {
-  const shuffled = [...DANGER_CATALOG].sort(() => Math.random() - 0.5);
+  const shuffled = [...DANGER_CATEGORIES].sort(() => Math.random() - 0.5);
   const count = 2 + Math.floor(Math.random() * 2);
-  return shuffled.slice(0, count).map((item) => ({
-    ...item,
+  return shuffled.slice(0, count).map((category) => ({
+    ...DANGER_CATALOG[category],
     id: createId(),
+    category,
     x: randomPosition(),
     y: randomPosition(),
     checkedBy: { grandchild: false, grandparent: false },
