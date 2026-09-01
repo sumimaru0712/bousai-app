@@ -42,7 +42,8 @@ export interface DangerMark {
   advice: string;
   detail: string;
   fixes: DangerFix[];
-  resolved: boolean;
+  checkedBy: Record<Role, boolean>;
+  resolvedAt: string | null;
 }
 
 export interface RoomPhoto {

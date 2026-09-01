@@ -1,7 +1,10 @@
 import { createId } from "./id";
 import type { DangerMark } from "./types";
 
-const DANGER_CATALOG: Omit<DangerMark, "id" | "x" | "y" | "resolved">[] = [
+const DANGER_CATALOG: Omit<
+  DangerMark,
+  "id" | "x" | "y" | "checkedBy" | "resolvedAt"
+>[] = [
   {
     category: "furniture",
     title: "家具の転倒",
@@ -108,6 +111,7 @@ export function generateDiagnosis(): DangerMark[] {
     id: createId(),
     x: randomPosition(),
     y: randomPosition(),
-    resolved: false,
+    checkedBy: { grandchild: false, grandparent: false },
+    resolvedAt: null,
   }));
 }

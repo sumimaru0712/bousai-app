@@ -1,5 +1,6 @@
 import { createDefaultState, STORAGE_KEY } from "./defaultState";
 import { createId } from "./id";
+import { isMarkResolved } from "./markStatus";
 import { generateDiagnosis } from "./roomDiagnosis";
 import type { GrowthSpecies } from "./growth";
 import { WEEKDAY_LABEL } from "./types";
@@ -31,12 +32,27 @@ function persist() {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function sanitizeMark(mark: DangerMark): DangerMark {
+function sanitizeMark(
+  mark: DangerMark & { resolved?: boolean },
+  fallbackTimestamp: string
+): DangerMark {
+  const legacyResolved = mark.resolved === true;
+  const checkedBy = mark.checkedBy ?? {
+    grandchild: legacyResolved,
+    grandparent: legacyResolved,
+  };
+  const resolvedAt =
+    mark.resolvedAt !== undefined
+      ? mark.resolvedAt
+      : legacyResolved
+        ? fallbackTimestamp
+        : null;
   return {
     ...mark,
     detail: mark.detail ?? mark.description ?? "",
     fixes: mark.fixes ?? [],
-    resolved: mark.resolved ?? false,
+    checkedBy,
+    resolvedAt,
   };
 }
 
@@ -45,7 +61,9 @@ function sanitizeRoomPhoto(photo: RoomPhoto): RoomPhoto {
     ...photo,
     comments: photo.comments ?? [],
     diagnosisStatus: photo.diagnosisStatus ?? "done",
-    marks: (photo.marks ?? []).map(sanitizeMark),
+    marks: (photo.marks ?? []).map((mark) =>
+      sanitizeMark(mark, photo.uploadedAt)
+    ),
   };
 }
 
@@ -270,10 +288,19 @@ export const store = {
     });
   },
 
-  toggleMarkResolved(photoId: string, markId: string) {
+  setMarkChecked(photoId: string, markId: string, checked: boolean) {
     const photo = state.roomPhotos.find((entry) => entry.id === photoId);
     const mark = photo?.marks.find((entry) => entry.id === markId);
-    const willResolve = mark ? !mark.resolved : false;
+    if (!mark) return;
+
+    const role = state.currentRole;
+    if (mark.checkedBy[role] === checked) return;
+
+    const wasResolved = isMarkResolved(mark);
+    const nextCheckedBy = { ...mark.checkedBy, [role]: checked };
+    const nowResolved = nextCheckedBy.grandchild && nextCheckedBy.grandparent;
+    const resolvedAt = nowResolved ? new Date().toISOString() : null;
+
     let next = withPoints(
       {
         ...state,
@@ -281,20 +308,27 @@ export const store = {
           entry.id === photoId
             ? {
                 ...entry,
-                marks: entry.marks.map((mark) =>
-                  mark.id === markId
-                    ? { ...mark, resolved: !mark.resolved }
-                    : mark
+                marks: entry.marks.map((m) =>
+                  m.id === markId
+                    ? { ...m, checkedBy: nextCheckedBy, resolvedAt }
+                    : m
                 ),
               }
             : entry
         ),
       },
-      willResolve ? 8 : -8
+      checked ? 3 : -3
     );
-    if (willResolve && mark) {
-      next = withActivity(next, `お部屋の危険「${mark.title}」をなおしたよ！`);
+
+    if (!wasResolved && nowResolved) {
+      next = withPoints(next, 8);
+      next = withActivity(next, `お部屋の危険「${mark.title}」を二人でなおしたよ！🎉`);
+    } else if (wasResolved && !nowResolved) {
+      next = withPoints(next, -8);
+    } else if (checked) {
+      next = withActivity(next, `お部屋の危険「${mark.title}」をチェックしたよ`);
     }
+
     update(next);
   },
 
