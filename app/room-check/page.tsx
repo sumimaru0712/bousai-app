@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { useAppState } from "@/lib/AppStateContext";
+import { t } from "@/lib/copy";
 import { getCheckCount, getPhotoProgress, isMarkResolved } from "@/lib/markStatus";
 import { resizeImageToDataUrl } from "@/lib/resizeImage";
 import { ROLE_LABEL, type DangerMark, type Role } from "@/lib/types";
@@ -130,7 +131,7 @@ export default function RoomCheckPage() {
                       href={`/room-check/${photo.id}/${mark.id}`}
                       style={{ left: `${mark.x}%`, top: `${mark.y}%` }}
                       className={`absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-lg ring-4 ${markerStyle}`}
-                      aria-label={`危険ポイント：${mark.title}`}
+                      aria-label={`危険ポイント：${t(mark.title, state.currentRole)}`}
                     >
                       {markerLabel}
                     </Link>
@@ -195,7 +196,7 @@ export default function RoomCheckPage() {
                                 : "text-zinc-900"
                             }`}
                           >
-                            {mark.title}
+                            {t(mark.title, state.currentRole)}
                           </span>
                           <span className="text-xs text-zinc-500">
                             {rowStatus}

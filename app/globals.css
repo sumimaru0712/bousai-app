@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+html[data-role="grandchild"] {
+  font-size: 16px;
+  --accent: var(--color-sky-600);
+  --accent-dark: var(--color-sky-700);
+  --accent-weak: var(--color-sky-50);
+  --accent-border: var(--color-sky-200);
+  --tap-min: 48px;
+}
+
+html[data-role="grandparent"] {
+  font-size: 20px;
+  --accent: var(--color-orange-600);
+  --accent-dark: var(--color-orange-700);
+  --accent-weak: var(--color-orange-50);
+  --accent-border: var(--color-orange-200);
+  --tap-min: 64px;
+}
+
+html {
+  transition: font-size 0.15s ease;
+}

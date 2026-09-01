@@ -15,7 +15,7 @@ export function RoleSwitcher() {
     <div
       role="group"
       aria-label="今の役割を選ぶ"
-      className="flex gap-1 rounded-full bg-orange-100 p-1"
+      className="flex gap-1 rounded-full bg-[var(--accent-weak)] p-1 ring-1 ring-[var(--accent-border)]"
     >
       {OPTIONS.map((option) => {
         const active = state.currentRole === option.role;
@@ -25,13 +25,15 @@ export function RoleSwitcher() {
             type="button"
             onClick={() => setRole(option.role)}
             aria-pressed={active}
-            className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-bold transition-colors ${
+            className={`flex min-h-[var(--tap-min)] items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-extrabold transition-all ${
               active
-                ? "bg-orange-600 text-white shadow"
-                : "text-orange-800 hover:bg-orange-200"
+                ? "scale-105 bg-[var(--accent)] text-white shadow-md"
+                : "text-zinc-500 hover:bg-white"
             }`}
           >
-            <span aria-hidden>{option.emoji}</span>
+            <span className="text-lg" aria-hidden>
+              {option.emoji}
+            </span>
             {option.label}
           </button>
         );
