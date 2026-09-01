@@ -94,6 +94,22 @@ export default function DangerMarkDetailPage({
             </div>
           </div>
 
+          {mark.observation && (
+            <section className="mt-5">
+              <h2 className="text-sm font-extrabold text-zinc-700">
+                📷 写真のここ
+              </h2>
+              <p className="mt-2 text-base leading-relaxed text-zinc-700">
+                {t(mark.observation, state.currentRole)}
+              </p>
+              {mark.confidence === "low" && (
+                <p className="mt-1 text-xs text-zinc-400">
+                  AIの見立てなので、ちがうときもあります。
+                </p>
+              )}
+            </section>
+          )}
+
           <section className="mt-5">
             <h2 className="text-sm font-extrabold text-red-700">
               🔍 ここが危ない
@@ -102,6 +118,25 @@ export default function DangerMarkDetailPage({
               {t(mark.detail, state.currentRole)}
             </p>
           </section>
+
+          {mark.points.length > 0 && (
+            <section className="mt-5">
+              <h2 className="text-sm font-extrabold text-orange-700">
+                💡 対策のポイント
+              </h2>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {mark.points.map((point) => (
+                  <li
+                    key={point.grandparent}
+                    className="flex items-start gap-2 text-sm text-zinc-700"
+                  >
+                    <span aria-hidden>・</span>
+                    {t(point, state.currentRole)}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section className="mt-5">
             <h2 className="text-sm font-extrabold text-green-700">

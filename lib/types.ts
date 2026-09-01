@@ -43,7 +43,10 @@ export interface DangerMark {
   description: RoleText;
   advice: RoleText;
   detail: RoleText;
+  points: RoleText[];
   fixes: DangerFix[];
+  observation?: RoleText;
+  confidence?: "high" | "low";
   checkedBy: Record<Role, boolean>;
   resolvedAt: string | null;
 }
