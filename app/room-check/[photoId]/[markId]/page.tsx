@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use } from "react";
 import { useAppState } from "@/lib/AppStateContext";
 import { t } from "@/lib/copy";
@@ -23,7 +24,8 @@ export default function DangerMarkDetailPage({
   params: Promise<{ photoId: string; markId: string }>;
 }) {
   const { photoId, markId } = use(params);
-  const { state, setMarkChecked } = useAppState();
+  const { state, setMarkChecked, dismissMark } = useAppState();
+  const router = useRouter();
 
   const photo = state.roomPhotos.find((item) => item.id === photoId);
   const mark = photo?.marks.find((item) => item.id === markId);
@@ -98,15 +100,18 @@ export default function DangerMarkDetailPage({
             <section className="mt-5">
               <h2 className="text-sm font-extrabold text-zinc-700">
                 📷 写真のここ
+                {mark.confidence === "low" && (
+                  <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-500">
+                    かくしんは低め
+                  </span>
+                )}
               </h2>
               <p className="mt-2 text-base leading-relaxed text-zinc-700">
                 {t(mark.observation, state.currentRole)}
               </p>
-              {mark.confidence === "low" && (
-                <p className="mt-1 text-xs text-zinc-400">
-                  AIの見立てなので、ちがうときもあります。
-                </p>
-              )}
+              <p className="mt-1 text-xs text-zinc-400">
+                AIの見立てなので、ちがうときもあります。かくにんしてみましょう。
+              </p>
             </section>
           )}
 
@@ -216,6 +221,19 @@ export default function DangerMarkDetailPage({
               🎉 二人で対策できました！
             </div>
           )}
+
+          <div className="mt-5 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                dismissMark(photo.id, mark.id);
+                router.push("/room-check");
+              }}
+              className="text-xs text-zinc-400 underline hover:text-zinc-600"
+            >
+              このマークはちがう（消す）
+            </button>
+          </div>
         </div>
       </div>
     </div>

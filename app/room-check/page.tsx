@@ -156,7 +156,7 @@ export default function RoomCheckPage() {
                 <button
                   type="button"
                   onClick={() => retryDiagnosis(photo.id)}
-                  className="shrink-0 rounded-full bg-red-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-red-700"
+                  className="min-h-[var(--tap-min)] shrink-0 rounded-full bg-red-600 px-4 text-xs font-extrabold text-white hover:bg-red-700"
                 >
                   もう一度みてもらう
                 </button>
