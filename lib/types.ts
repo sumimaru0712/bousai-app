@@ -57,7 +57,8 @@ export interface RoomPhoto {
   uploadedAt: string;
   uploadedBy: Role;
   comments: RoomComment[];
-  diagnosisStatus: "analyzing" | "done";
+  diagnosisStatus: "analyzing" | "done" | "error";
+  diagnosisError?: string;
   marks: DangerMark[];
 }
 

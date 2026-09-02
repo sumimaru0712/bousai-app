@@ -32,7 +32,7 @@ function formatTime(iso: string): string {
 }
 
 export default function RoomCheckPage() {
-  const { state, addRoomPhoto, addRoomComment } = useAppState();
+  const { state, addRoomPhoto, addRoomComment, retryDiagnosis } = useAppState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>(
     {}
@@ -111,7 +111,7 @@ export default function RoomCheckPage() {
                 alt="お部屋の写真"
                 fill
                 unoptimized
-                className="object-cover"
+                className="object-contain"
               />
 
               {photo.diagnosisStatus === "done" &&
@@ -145,6 +145,27 @@ export default function RoomCheckPage() {
                   🔄
                 </span>
                 AIが診断中です…
+              </div>
+            )}
+
+            {photo.diagnosisStatus === "error" && (
+              <div className="flex items-center justify-between gap-3 bg-red-50 px-4 py-3">
+                <p className="text-sm font-bold text-red-700">
+                  ⚠️ {photo.diagnosisError ?? "うまく診断できませんでした"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => retryDiagnosis(photo.id)}
+                  className="shrink-0 rounded-full bg-red-600 px-4 py-2 text-xs font-extrabold text-white hover:bg-red-700"
+                >
+                  もう一度みてもらう
+                </button>
+              </div>
+            )}
+
+            {photo.diagnosisStatus === "done" && photo.marks.length === 0 && (
+              <div className="bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
+                ✅ 危険は見つかりませんでした
               </div>
             )}
 
