@@ -422,6 +422,17 @@ export const store = {
     update(next);
   },
 
+  dismissMark(photoId: string, markId: string) {
+    update({
+      ...state,
+      roomPhotos: state.roomPhotos.map((photo) =>
+        photo.id === photoId
+          ? { ...photo, marks: photo.marks.filter((m) => m.id !== markId) }
+          : photo
+      ),
+    });
+  },
+
   setGrowthEnabled(enabled: boolean) {
     update({
       ...state,
