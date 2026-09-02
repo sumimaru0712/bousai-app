@@ -7,9 +7,18 @@ import {
   type ValidatedDetection,
 } from "@/lib/diagnosisSchema";
 
-const MODEL = "gemini-3.7-flash";
-const TIMEOUT_MS = 25000;
+// gemini-3.7-flash is the preferred model, but as a newly released model it
+// occasionally returns 503 "high demand" errors. Retry it a couple of times,
+// then fall back to the more established gemini-2.5-flash so a live demo
+// doesn't stall on a transient Gemini outage.
+const PRIMARY_MODEL = "gemini-3.7-flash";
+const FALLBACK_MODEL = "gemini-2.5-flash";
+const ATTEMPTS_PER_MODEL = 2;
+const ATTEMPT_TIMEOUT_MS = 12000;
+const RETRY_DELAY_MS = 1000;
 const MAX_IMAGE_BASE64_LENGTH = 2 * 1024 * 1024; // ~1.5MB binary
+
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
 const RequestSchema = z.object({
   imageBase64: z.string().min(1),
@@ -20,6 +29,68 @@ function timeout(ms: number): Promise<never> {
   return new Promise((_, reject) => {
     setTimeout(() => reject(new Error("timeout")), ms);
   });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryable(error: unknown): boolean {
+  if (error instanceof Error && error.message === "timeout") return true;
+  const status = (error as { status?: unknown } | undefined)?.status;
+  return typeof status === "number" && RETRYABLE_STATUS_CODES.has(status);
+}
+
+async function callModel(
+  ai: GoogleGenAI,
+  model: string,
+  imageBase64: string,
+  mimeType: string
+) {
+  return Promise.race([
+    ai.models.generateContent({
+      model,
+      contents: [
+        { text: DIAGNOSIS_PROMPT },
+        { inlineData: { data: imageBase64, mimeType } },
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseJsonSchema: z.toJSONSchema(DetectionSchema),
+      },
+    }),
+    timeout(ATTEMPT_TIMEOUT_MS),
+  ]);
+}
+
+async function generateWithFallback(
+  ai: GoogleGenAI,
+  imageBase64: string,
+  mimeType: string
+) {
+  let lastError: unknown;
+
+  for (const model of [PRIMARY_MODEL, FALLBACK_MODEL]) {
+    for (let attempt = 1; attempt <= ATTEMPTS_PER_MODEL; attempt++) {
+      try {
+        return await callModel(ai, model, imageBase64, mimeType);
+      } catch (error) {
+        lastError = error;
+        console.error(
+          `[api/diagnose] ${model} attempt ${attempt} failed:`,
+          error
+        );
+        if (!isRetryable(error)) {
+          throw error;
+        }
+        if (attempt < ATTEMPTS_PER_MODEL) {
+          await sleep(RETRY_DELAY_MS);
+        }
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 function mockDetectionResponse(): { detections: ValidatedDetection[] } {
@@ -77,21 +148,7 @@ export async function POST(request: Request) {
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-
-    const response = await Promise.race([
-      ai.models.generateContent({
-        model: MODEL,
-        contents: [
-          { text: DIAGNOSIS_PROMPT },
-          { inlineData: { data: imageBase64, mimeType } },
-        ],
-        config: {
-          responseMimeType: "application/json",
-          responseJsonSchema: z.toJSONSchema(DetectionSchema),
-        },
-      }),
-      timeout(TIMEOUT_MS),
-    ]);
+    const response = await generateWithFallback(ai, imageBase64, mimeType);
 
     const text = response.text;
     if (!text) {
