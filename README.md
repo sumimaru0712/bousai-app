@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ぼうさいアプリ
 
-## Getting Started
+遠くに離れて暮らすおじいちゃん・おばあちゃんと、孫が一緒に防災対策をすすめるためのアプリです。
+全国選抜小学生プログラミング大会 応募作品。
 
-First, run the development server:
+詳しい企画意図は [docs/DOMAIN.md](docs/DOMAIN.md)、発表用の構成は [docs/プレゼン.md](docs/プレゼン.md) を参照してください。
+
+## 主な機能
+
+- **安否確認**：ワンタップで「無事です」を家族に伝える。祖父母役が押すと、その日の孫のボイスメッセージが自動再生される
+- **防災チェックリスト**：非常持ち出し袋などを、孫と祖父母で確認しながら進める
+- **お部屋防災診断（AI）**：お部屋の写真をGemini（AI）が見て、危ない箇所の位置・カテゴリ・見立てを検出。祖父母・孫がそれぞれ「できた！」をチェックし、両方そろうと自動で完了する
+- **毎日の体調共有**：「元気・普通・元気がない」の3段階を毎日共有
+- **曜日ごとの孫からのボイス**：話題のヒントを見ながら、孫が短い声のメッセージを録音
+- **育成ゲーム・防災ミニゲーム**：防災の取り組みでコインが貯まり、キャラクターが育つ。クイズ・非常持ち出し袋あて・危険さがしの3種のミニゲームも搭載
+- **役割別の表示モード**：孫（青系・やさしい表記）／祖父母（オレンジ系・文字1.25倍）を切り替えると、画面全体の見た目が変わる
+- **家族の「できごと」通知**：チェックリスト達成やお部屋の危険をなおしたことなどが、家族に自動で伝わる
+
+## セットアップ
+
+```bash
+npm install
+```
+
+AI診断（Gemini）を使う場合は `.env.example` を `.env.local` にコピーし、`GEMINI_API_KEY` を設定してください。
+APIキーが無い場合や、オフラインでのデモ用には `USE_MOCK_DIAGNOSIS=1` を設定するとAIを呼ばずに動作します。
+
+```bash
+cp .env.example .env.local
+```
+
+## 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) を開くと確認できます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## その他のコマンド
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint    # ESLint
+npm run build   # 本番ビルド
+```
 
-## Learn More
+## 技術構成
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js](https://nextjs.org)（App Router） / React / TypeScript
+- Tailwind CSS
+- 状態管理：`localStorage` に保存するシンプルなストア（`lib/store.ts`）
+- AI診断：[`@google/genai`](https://www.npmjs.com/package/@google/genai) 経由で Gemini API を呼び出すサーバー側APIルート（`app/api/diagnose`）
