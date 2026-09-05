@@ -12,7 +12,7 @@ import {
 // then fall back to the more established gemini-2.5-flash so a live demo
 // doesn't stall on a transient Gemini outage.
 const PRIMARY_MODEL = "gemini-3.7-flash";
-const FALLBACK_MODEL = "gemini-2.5-flash";
+const FALLBACK_MODEL = "gemini-3.6-flash";
 const ATTEMPTS_PER_MODEL = 2;
 const ATTEMPT_TIMEOUT_MS = 12000;
 const RETRY_DELAY_MS = 1000;
