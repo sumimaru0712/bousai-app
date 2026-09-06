@@ -216,7 +216,11 @@ async function runDiagnosis(photoId: string, dataUrl: string) {
     });
 
     if (!res.ok) {
-      setPhotoError(photoId, "うまく診断できませんでした");
+      const message =
+        res.status === 413
+          ? "写真が大きすぎます。もう一度撮りなおしてみてください"
+          : "うまく診断できませんでした";
+      setPhotoError(photoId, message);
       return;
     }
 
