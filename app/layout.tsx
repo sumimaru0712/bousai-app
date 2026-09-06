@@ -29,8 +29,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ぼうさいアプリ",
-  description: "離れて暮らす家族と、一緒にすすめる防災対策アプリ",
+  title: "まごチェック｜じいじとばあばと一緒に防災",
+  description: "離れて暮らす、じいじ・ばあばと孫が一緒にすすめる防災対策アプリ",
 };
 
 export default function RootLayout({

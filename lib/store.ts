@@ -200,6 +200,8 @@ function setPhotoError(photoId: string, diagnosisError: string) {
   });
 }
 
+const FETCH_TIMEOUT_MS = 45000;
+
 async function runDiagnosis(photoId: string, dataUrl: string) {
   const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) {
@@ -208,11 +210,15 @@ async function runDiagnosis(photoId: string, dataUrl: string) {
   }
   const [, mimeType, imageBase64] = match;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
   try {
     const res = await fetch("/api/diagnose", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ imageBase64, mimeType }),
+      signal: controller.signal,
     });
 
     if (!res.ok) {
@@ -238,8 +244,16 @@ async function runDiagnosis(photoId: string, dataUrl: string) {
           : photo
       ),
     });
-  } catch {
-    setPhotoError(photoId, "通信エラーが発生しました");
+  } catch (error) {
+    const timedOut = error instanceof Error && error.name === "AbortError";
+    setPhotoError(
+      photoId,
+      timedOut
+        ? "通信がタイムアウトしました。電波の良い場所でもう一度お試しください"
+        : "通信エラーが発生しました"
+    );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

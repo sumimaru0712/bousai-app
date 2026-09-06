@@ -152,19 +152,37 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-6">
-      <section className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-orange-100">
-        <p className="text-sm font-bold text-orange-600">
+      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-500 via-orange-400 to-sky-500 p-6 text-white shadow-lg">
+        <div className="flex items-center gap-4">
+          <div
+            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl backdrop-blur"
+            aria-hidden
+          >
+            🧒👴
+          </div>
+          <div>
+            <p className="text-xs font-extrabold tracking-widest text-white/80">
+              BOUSAI × KAZOKU
+            </p>
+            <h1
+              className={`font-extrabold leading-tight ${
+                isGrandparent ? "text-4xl" : "text-3xl"
+              }`}
+            >
+              まごチェック
+            </h1>
+          </div>
+        </div>
+        <p
+          className={`mt-4 font-extrabold ${isGrandparent ? "text-xl" : "text-lg"}`}
+        >
+          じいじとばあばと、いっしょに防災。
+        </p>
+        <p className="mt-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur">
           いま：{ROLE_LABEL[state.currentRole]} として見ています
         </p>
-        <h1
-          className={`mt-2 font-extrabold text-zinc-900 ${
-            isGrandparent ? "text-3xl" : "text-2xl"
-          }`}
-        >
-          はなれていても、いっしょに防災。
-        </h1>
         <p
-          className={`mt-2 text-zinc-600 ${isGrandparent ? "text-lg" : ""}`}
+          className={`mt-3 text-white/90 ${isGrandparent ? "text-lg" : ""}`}
         >
           {isGrandparent
             ? "むずかしい操作はありません。大きなボタンから、ひとつずつ確認できます。"
