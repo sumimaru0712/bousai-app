@@ -37,16 +37,19 @@ export default function RoomCheckPage() {
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>(
     {}
   );
+  const [pickError, setPickError] = useState<string | null>(null);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    setPickError(null);
     try {
       const dataUrl = await resizeImageToDataUrl(file);
       addRoomPhoto(dataUrl);
-    } catch {
-      // Ignore unreadable files; the user can just retake the photo.
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      setPickError(`写真を読み込めませんでした（${detail}）`);
     }
   }
 
@@ -90,6 +93,12 @@ export default function RoomCheckPage() {
         >
           📷 お部屋の写真をとる
         </button>
+
+        {pickError && (
+          <p className="mt-3 rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-700">
+            ⚠️ {pickError}
+          </p>
+        )}
       </section>
 
       <section className="flex flex-col gap-4">
