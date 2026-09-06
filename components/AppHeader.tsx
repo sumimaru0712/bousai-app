@@ -16,11 +16,14 @@ export function AppHeader() {
     <header className="sticky top-0 z-10 border-b border-[var(--accent-border)] bg-[var(--accent-weak)]/95 backdrop-blur">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl" aria-hidden>
-            🏡
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-sky-500 text-sm shadow-sm"
+            aria-hidden
+          >
+            🧒👴
           </span>
           <span className="text-lg font-extrabold text-[var(--accent-dark)]">
-            ぼうさいアプリ
+            まごチェック
           </span>
         </Link>
         <RoleSwitcher />
