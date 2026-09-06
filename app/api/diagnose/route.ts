@@ -16,7 +16,12 @@ const FALLBACK_MODEL = "gemini-3.6-flash";
 const ATTEMPTS_PER_MODEL = 2;
 const ATTEMPT_TIMEOUT_MS = 12000;
 const RETRY_DELAY_MS = 1000;
-const MAX_IMAGE_BASE64_LENGTH = 2 * 1024 * 1024; // ~1.5MB binary
+// Photos are resized/compressed client-side before upload, but that step
+// can silently fail (e.g. a phone photo format the browser can't decode),
+// in which case the original, unresized photo is sent instead. Gemini
+// accepts inline images up to 100MB, so keep this generous rather than
+// rejecting a real (if uncompressed) phone photo.
+const MAX_IMAGE_BASE64_LENGTH = 15 * 1024 * 1024; // ~11MB binary
 
 const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
