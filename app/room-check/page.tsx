@@ -80,7 +80,6 @@ export default function RoomCheckPage() {
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={handleFileChange}
           className="absolute h-px w-px overflow-hidden whitespace-nowrap opacity-0"
         />
